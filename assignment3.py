@@ -3,7 +3,7 @@ import time
 from playwright.sync_api import Playwright, expect
 
 
-def test_open_browser(playwright: Playwright):
+def test_eventhub_e2e(playwright: Playwright):
     browser = playwright.chromium.launch(headless=False)
     context = browser.new_context()
     page =  context.new_page()
