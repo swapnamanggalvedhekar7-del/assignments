@@ -1,3 +1,4 @@
+import re
 import time
 
 from playwright.sync_api import Playwright, expect
@@ -18,16 +19,18 @@ def test_eventhub_e2e(playwright: Playwright):
     #Confirm the Upcoming Events heading is visible
     expect(page.locator("h1").filter(has_text="Upcoming Events")).to_be_visible()
     #Use several locator strategies on the filter area: search for World, choose category Conference, and choose city Hyderabad.
+    page.wait_for_load_state("networkidle")
     page.get_by_placeholder("Search events, venues…").fill("World")
     category_dropdown = page.locator("select").filter(has_text="All Categories")
     category_dropdown.select_option(value="Conference")
     city_dropdown = page.locator("select").filter(has_text="All Cities")
     city_dropdown.select_option(value="Hyderabad")
-    page.screenshot(path="search_results.png")
+    #page.screenshot(path="search_results.png")
     #Work with the visible event cards: confirm at least one card matches, narrow to the card that shows World Tech Summit, and confirm exactly one match.
     page.wait_for_load_state("networkidle")
-    event_count = page.get_by_test_id("event-card").count()
-    assert event_count == 1,'count is more than 1'
+    event_count = page.get_by_test_id("event-card")
+    #print(event_count)
+    expect(event_count).to_have_count(1, timeout=7000)
     event_card = page.get_by_test_id("event-card").first
     #From that matching card, capture the event title, price text, and seats text.
     event_title = event_card.locator("h3").filter(has_text='World Tech Summit').text_content()
@@ -41,8 +44,8 @@ def test_eventhub_e2e(playwright: Playwright):
     assert available_seat_count[0] > "0", f"Expected available seats to be greater than 0 but got '{available_seat_count[0]}'"
     #From inside that same card only, open Book Now.
     event_card.get_by_test_id("book-now-btn").click()
-    page.wait_for_load_state("networkidle")
-    print(page.url)
+    #page.wait_for_load_state("networkidle")
+    expect(page).to_have_url(re.compile(r'/events/'))
     #assert page.url == url,f"f Expected url is {url} but got {page.url}"
     event_title_stored = page.locator("h1").filter(has_text="World Tech Summit").text_content()
     assert event_title_stored == "World Tech Summit", f"Expected 'World Tech Summit' but got '{event_title_stored}'"
@@ -55,8 +58,9 @@ def test_eventhub_e2e(playwright: Playwright):
     clear_filter_btn.click()
     card = page.locator("//div/child::article")
     count = card.count()
-    print(count)
-    assert count >= 3, f"Expected at least 3 events but got {count}"
+    expect(card).to_have_count(3, timeout=7000)
+    # print(count)
+    #assert count >= 3, f"Expected at least 3 events but got {count}"
     for i in range(count):
         card_nth = card.nth(i)
         print(card_nth.locator("h3").text_content())
