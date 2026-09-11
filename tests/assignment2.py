@@ -6,8 +6,11 @@ from playwright.sync_api import expect, Playwright, Page
 
 
 @pytest.mark.smoke
-def test_eventhub_validateFields(browser_page):
-    page=browser_page
+def test_eventhub_validateFields(playwright:Playwright,base_url):
+    browser = playwright.chromium.launch(headless=False)
+    context =  browser.new_context()
+    page = context.new_page()
+    page.goto(f"{base_url}/login")
     expect(page).to_have_url(re.compile(r'/login'))
     expect(page).to_have_title(re.compile(r'EventHub'))
     expect(page.get_by_label("Email")).to_be_visible()
